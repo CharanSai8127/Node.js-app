@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: charansait372/node-js: blue  # Replace with your Blue version image
+        image: charansait372/node-js:blue  # Removed space after colon
         env:
         - name: DB_HOST
           value: "mysql"  # MySQL service name
