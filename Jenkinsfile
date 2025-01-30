@@ -28,6 +28,14 @@ pipeline {
                 }
             }
         }
+
+	  stage('Quality-gate-check') {
+            steps {
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
+                }
+            }
+        }
         
         stage('Trivy FS Scan') {
             steps {
