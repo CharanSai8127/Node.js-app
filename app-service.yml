@@ -9,4 +9,4 @@ spec:
   selector:
     app: app
     version: blue  # Initially point to the Blue version
-  type: LoadBalancer
+  type: NodePort
