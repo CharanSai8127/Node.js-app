@@ -16,15 +16,27 @@ spec:
     spec:
       containers:
       - name: app
-        image: "charansait372/node-js:green"  # Corrected the image format
+        image: "charansait372/node-js:green"
         env:
         - name: DB_HOST
-          value: "mysql"  # MySQL service name
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_HOST
         - name: DB_USER
-          value: "root"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_USER
         - name: DB_PASSWORD
-          value: "password"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_PASSWORD
         - name: DB_NAME
-          value: "test_db"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_NAME
         ports:
         - containerPort: 5000
