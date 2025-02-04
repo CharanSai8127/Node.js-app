@@ -2,7 +2,7 @@ const mysql = require('mysql2'); // Install mysql2
 
 // Use environment variables to configure the database connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || 'mysql',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
