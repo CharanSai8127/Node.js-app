@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 
 // Database connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost', // 'localhost' for local, 'mysql' for Kubernetes service
+  host: process.env.DB_HOST || 'mysql', // 'localhost' for local, 'mysql' for Kubernetes service
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
