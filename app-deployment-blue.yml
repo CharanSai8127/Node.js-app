@@ -16,27 +16,15 @@ spec:
     spec:
       containers:
       - name: app
-        image: charansait372/node-js:blue
+        image: charansait372/node-js:blue  # Removed space after colon
         env:
         - name: DB_HOST
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: DB_HOST
+          value: "mysql"  # MySQL service name
         - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: DB_USER
+          value: "root"
         - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: DB_PASSWORD
+          value: "password"
         - name: DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: DB_NAME
+          value: "test_db"
         ports:
         - containerPort: 5000
