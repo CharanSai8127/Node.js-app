@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 // Database connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost', // Use 'mysql' to connect to MySQL container
+  host: process.env.DB_HOST || 'localhost', // 'localhost' for local, 'mysql' for Kubernetes service
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
@@ -98,4 +98,3 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
