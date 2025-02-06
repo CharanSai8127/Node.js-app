@@ -22,7 +22,7 @@ WORKDIR /usr/src/app/server
 # Copy the server package.json and package-lock.json
 COPY server/package*.json ./
 
-# Install the server dependencies
+# Install the server dependencies (this ensures dotenv is installed)
 RUN npm install
 
 # Copy the server source code
@@ -36,4 +36,3 @@ EXPOSE 5000
 
 # Command to run the server
 CMD ["npm", "start"]
-
