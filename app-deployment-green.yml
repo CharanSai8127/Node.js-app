@@ -14,6 +14,7 @@ spec:
         app: app
         version: green
     spec:
+      dnsPolicy: ClusterFirst  # Explicitly setting ClusterFirst for internal DNS resolution
       containers:
       - name: app
         image: "charansait372/node-js:green"  # Corrected the image format
