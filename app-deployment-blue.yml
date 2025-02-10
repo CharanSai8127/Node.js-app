@@ -14,12 +14,13 @@ spec:
         app: app
         version: blue
     spec:
+      dnsPolicy: ClusterFirst  # Explicitly specifying ClusterFirst
       containers:
       - name: app
-        image: charansait372/node-js:blue  # Removed space after colon
+        image: charansait372/node-js:blue
         env:
         - name: DB_HOST
-          value: "mysql"  # MySQL service name
+          value: "mysql"
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
