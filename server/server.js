@@ -16,18 +16,22 @@ app.use(bodyParser.json());
 
 // Database connection with retry logic
 const dbConfig = {
-  host: process.env.DB_HOST || 'mysql', // Change this to your Kubernetes MySQL service name
+  host: process.env.DB_HOST || 'mysql.webapps.svc.cluster.local', // Kubernetes service DNS
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
 };
 
 let db;
+const maxRetries = 5; // Limit retries to prevent infinite loops
+let attempt = 0;
+
 const connectToDB = async () => {
-  while (!db) {
+  while (!db && attempt < maxRetries) {
     try {
+      console.log(`Attempting to connect to database... (${attempt + 1}/${maxRetries})`);
       db = await mysql.createConnection(dbConfig);
-      console.log('Database connected.');
+      console.log('✅ Database connected.');
 
       // Initialize database with `users` table if it doesn't exist
       const createUsersTable = `
@@ -39,14 +43,21 @@ const connectToDB = async () => {
         )
       `;
       await db.query(createUsersTable);
-      console.log('Users table initialized or already exists.');
+      console.log('✅ Users table initialized or already exists.');
+      break; // Exit loop if connection succeeds
     } catch (err) {
-      console.error('Database connection failed:', err.message);
-      console.log('Retrying in 5 seconds...');
+      attempt++;
+      console.error(`❌ Database connection failed: ${err.message}`);
+      if (attempt >= maxRetries) {
+        console.error('❌ Max retries reached. Exiting...');
+        process.exit(1); // Exit if max retries are exceeded
+      }
+      console.log('🔄 Retrying in 5 seconds...');
       await new Promise((res) => setTimeout(res, 5000));
     }
   }
 };
+
 connectToDB();
 
 // API Routes
@@ -100,5 +111,5 @@ app.get('*', (req, res) => {
 
 // Start server on 0.0.0.0 for Kubernetes compatibility
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${port}`);
+  console.log(`🚀 Server is running on http://0.0.0.0:${port}`);
 });
