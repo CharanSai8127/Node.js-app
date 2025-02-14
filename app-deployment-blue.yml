@@ -20,7 +20,7 @@ spec:
         image: charansait372/node-js:blue
         env:
         - name: DB_HOST
-          value: "mysql"
+          value: "mysql.webapps.svc.cluster.local"
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
