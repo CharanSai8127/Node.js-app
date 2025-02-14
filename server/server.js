@@ -3,90 +3,91 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise'); // Using promise-based MySQL
 const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 5000; // Use an environment variable for the port
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Database connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'mysql', // 'localhost' for local, 'mysql' for Kubernetes service
+// Database connection with retry logic
+const dbConfig = {
+  host: process.env.DB_HOST || 'mysql', // Change this to your Kubernetes MySQL service name
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
-});
+};
 
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err.stack);
-    process.exit(1);
-  }
-  console.log('Database connected.');
+let db;
+const connectToDB = async () => {
+  while (!db) {
+    try {
+      db = await mysql.createConnection(dbConfig);
+      console.log('Database connected.');
 
-  // Initialize database with `users` table if it doesn't exist
-  const createUsersTable = `
-    CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      role ENUM('Admin', 'User') NOT NULL
-    )
-  `;
-
-  db.query(createUsersTable, (err, results) => {
-    if (err) {
-      console.error('Failed to create users table:', err.stack);
-      process.exit(1);
+      // Initialize database with `users` table if it doesn't exist
+      const createUsersTable = `
+        CREATE TABLE IF NOT EXISTS users (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL UNIQUE,
+          role ENUM('Admin', 'User') NOT NULL
+        )
+      `;
+      await db.query(createUsersTable);
+      console.log('Users table initialized or already exists.');
+    } catch (err) {
+      console.error('Database connection failed:', err.message);
+      console.log('Retrying in 5 seconds...');
+      await new Promise((res) => setTimeout(res, 5000));
     }
-    console.log('Users table initialized or already exists.');
-  });
-});
+  }
+};
+connectToDB();
 
 // API Routes
-app.get('/api/users', (req, res) => {
-  db.query('SELECT * FROM users', (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+app.get('/api/users', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM users');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const { name, email, role } = req.body;
-  db.query('INSERT INTO users (name, email, role) VALUES (?, ?, ?)', [name, email, role], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    const [results] = await db.query('INSERT INTO users (name, email, role) VALUES (?, ?, ?)', [name, email, role]);
     res.status(201).json({ id: results.insertId, name, email, role });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   const { name, email, role } = req.body;
-  db.query('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?', [name, email, role, id], (err) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    await db.query('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?', [name, email, role, id]);
     res.status(200).json({ id, name, email, role });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', async (req, res) => {
   const { id } = req.params;
-  db.query('DELETE FROM users WHERE id = ?', [id], (err) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    await db.query('DELETE FROM users WHERE id = ?', [id]);
     res.status(200).json({ message: 'User deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve static files from the client/public directory
@@ -97,7 +98,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// Start server on 0.0.0.0 for Kubernetes compatibility
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${port}`);
 });
