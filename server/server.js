@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 
 // Database connection with retry logic
 const dbConfig = {
-  host: process.env.DB_HOST || 'mysql.webapps.svc.cluster.local', // Kubernetes service DNS
+  host: process.env.DB_HOST || 'mysql', // Kubernetes service DNS
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'test_db',
