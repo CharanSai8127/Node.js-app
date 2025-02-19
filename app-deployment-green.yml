@@ -20,7 +20,7 @@ spec:
         image: "charansait372/node-js:green"  # Corrected the image format
         env:
         - name: DB_HOST
-          value: "mysql.webapps.svc.cluster.local"  # MySQL service name
+          value: "mysql"  # MySQL service name
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
