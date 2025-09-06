@@ -14,18 +14,27 @@ spec:
         app: app
         version: blue
     spec:
-      dnsPolicy: ClusterFirst  # Explicitly specifying ClusterFirst
+      dnsPolicy: ClusterFirst
       containers:
       - name: app
         image: charansait372/node-js:blue
         env:
         - name: DB_HOST
-          value: "mysql"
+          value: "mysql"   # MySQL service name (same namespace)
         - name: DB_USER
-          value: "root"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: DB_USER
         - name: DB_PASSWORD
-          value: "password"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: DB_PASSWORD
         - name: DB_NAME
-          value: "test_db"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: DB_NAME
         ports:
         - containerPort: 5000
