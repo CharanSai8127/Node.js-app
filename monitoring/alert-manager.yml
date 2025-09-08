@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-alerts
+  labels:
+    role: alert-rules
+spec:
+  groups:
+  - name: app.rules
+    rules:
+    - alert: HighCPUUsage
+      expr: avg(rate(container_cpu_usage_seconds_total{pod=~"app-.*"}[5m])) > 0.8
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage detected on app pods"
+        description: "CPU usage > 80% for more than 2m."
+
+    - alert: MySQLDown
+      expr: mysql_up == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "MySQL is down"
+        description: "MySQL exporter reports mysql_up=0."
+

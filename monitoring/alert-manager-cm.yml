@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  labels:
+    app: alertmanager
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'your-email@gmail.com'
+      smtp_auth_username: 'your-email@gmail.com'
+      smtp_auth_password: 'your-app-password'   # Use App Password if Gmail
+
+    route:
+      receiver: email-alerts
+      group_by: ['alertname']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 1h
+
+    receivers:
+    - name: email-alerts
+      email_configs:
+      - to: 'destination-email@example.com'
+        send_resolved: true
+

@@ -4,9 +4,11 @@ metadata:
   name: app
 spec:
   ports:
-  - port: 80
+  - name: http          # 👈 added named port
+    port: 80
     targetPort: 5000
   selector:
     app: app
-    version: blue  # Initially point to the Blue version
+    version: blue       # Initially point to the Blue version
   type: NodePort
+

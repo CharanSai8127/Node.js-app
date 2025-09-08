@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mysql-allow-apps
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: mysql
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: app
+          version: blue
+    - podSelector:
+        matchLabels:
+          app: app
+          version: green
+    ports:
+    - protocol: TCP
+      port: 3306
+
