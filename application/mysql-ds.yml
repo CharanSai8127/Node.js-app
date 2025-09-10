@@ -12,8 +12,6 @@ spec:
     metadata:
       labels:
         app: mysql
-      annotations:
-        iam.amazonaws.com/role: arn:aws:iam::484907487964:role/NodeRole
     spec:
       containers:
       - name: mysql
