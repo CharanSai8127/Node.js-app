@@ -20,7 +20,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: nginx-gateway-metrics
-  namespace: monitoring
+  namespace: nginx-gateway
   labels:
     release: prometheus   # must match your Prometheus Helm release
 spec:
