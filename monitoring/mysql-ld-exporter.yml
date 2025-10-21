@@ -6,7 +6,8 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  data-source-name: "root:password@(mysql:3306)/test_db"
+  # ✅ Correct DSN format for mysqld-exporter
+  data-source-name: "root:password@tcp(mysql.default.svc.cluster.local:3306)/"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,6 +38,13 @@ spec:
             secretKeyRef:
               name: mysql-exporter-secret
               key: data-source-name
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
 ---
 apiVersion: v1
 kind: Service
@@ -52,19 +60,3 @@ spec:
     targetPort: metrics
   selector:
     app: mysql-exporter
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: mysql-exporter
-  namespace: default
-  labels:
-    release: kube-prometheus-stack
-spec:
-  selector:
-    matchLabels:
-      app: mysql-exporter
-  endpoints:
-  - port: metrics
-    interval: 30s
-
