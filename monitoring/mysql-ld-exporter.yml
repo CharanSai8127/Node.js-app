@@ -6,8 +6,8 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  # ✅ Correct DSN format for mysqld-exporter
-  data-source-name: "root:password@tcp(mysql.default.svc.cluster.local:3306)/"
+  mysql-username: "root"
+  mysql-password: "password"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -29,15 +29,28 @@ spec:
       containers:
       - name: mysql-exporter
         image: prom/mysqld-exporter:v0.15.0
-        ports:
-        - name: metrics
-          containerPort: 9104
+        args:
+          - "--mysqld.username=$(MYSQL_USER)"
+          - "--mysqld.address=mysql.default.svc.cluster.local:3306"
+          - "--collect.global_status"
+          - "--collect.global_variables"
+          - "--collect.info_schema.tables"
+          - "--collect.perf_schema.file_events"
+          - "--collect.binlog_size"
         env:
-        - name: DATA_SOURCE_NAME
-          valueFrom:
-            secretKeyRef:
-              name: mysql-exporter-secret
-              key: data-source-name
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-exporter-secret
+                key: mysql-username
+          - name: MYSQLD_EXPORTER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-exporter-secret
+                key: mysql-password
+        ports:
+          - name: metrics
+            containerPort: 9104
         resources:
           requests:
             cpu: 50m
@@ -45,6 +58,18 @@ spec:
           limits:
             cpu: 100m
             memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9104
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9104
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
 ---
 apiVersion: v1
 kind: Service
@@ -53,10 +78,13 @@ metadata:
   namespace: default
   labels:
     app: mysql-exporter
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9104"
 spec:
-  ports:
-  - name: metrics
-    port: 9104
-    targetPort: metrics
   selector:
     app: mysql-exporter
+  ports:
+    - name: metrics
+      port: 9104
+      targetPort: metrics
