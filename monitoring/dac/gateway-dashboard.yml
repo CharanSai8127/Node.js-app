@@ -11,7 +11,7 @@ data:
       "uid": "mysql-exporter-dashboard",
       "title": "MySQL Database Overview",
       "schemaVersion": 36,
-      "version": 1,
+      "version": 2,
       "refresh": "15s",
       "panels": [
         {
@@ -20,7 +20,7 @@ data:
           "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
           "targets": [
             {
-              "expr": "mysql_global_status_threads_connected{job=\"mysql-exporter\",namespace=\"default\"}",
+              "expr": "mysql_global_status_threads_connected{namespace=\"default\"}",
               "legendFormat": "connected"
             }
           ]
@@ -31,7 +31,7 @@ data:
           "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
           "targets": [
             {
-              "expr": "sum(rate(mysql_global_status_queries_total{job=\"mysql-exporter\",namespace=\"default\"}[5m]))",
+              "expr": "sum(rate(mysql_global_status_queries_total{namespace=\"default\"}[5m]))",
               "legendFormat": "queries/s"
             }
           ]
@@ -42,23 +42,23 @@ data:
           "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
           "targets": [
             {
-              "expr": "sum(rate(mysql_global_status_slow_queries_total{job=\"mysql-exporter\",namespace=\"default\"}[5m]))",
+              "expr": "sum(rate(mysql_global_status_slow_queries_total{namespace=\"default\"}[5m]))",
               "legendFormat": "slow/s"
             }
           ]
         },
         {
-          "type": "graph",
+          "type": "timeseries",
           "title": "InnoDB Buffer Pool Activity",
           "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
           "targets": [
             {
-              "expr": "rate(mysql_global_status_innodb_buffer_pool_read_requests_total{job=\"mysql-exporter\",namespace=\"default\"}[5m])",
-              "legendFormat": "read_requests/s"
+              "expr": "rate(mysql_global_status_innodb_buffer_pool_read_requests_total{namespace=\"default\"}[5m])",
+              "legendFormat": "buffer_pool_read_requests/s"
             },
             {
-              "expr": "rate(mysql_global_status_innodb_buffer_pool_reads_total{job=\"mysql-exporter\",namespace=\"default\"}[5m])",
-              "legendFormat": "reads/s"
+              "expr": "rate(mysql_global_status_innodb_buffer_pool_reads_total{namespace=\"default\"}[5m])",
+              "legendFormat": "disk_reads/s"
             }
           ]
         }

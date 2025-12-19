@@ -1,90 +1,43 @@
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-exporter-secret
-  namespace: default
-type: Opaque
-stringData:
-  mysql-username: "root"
-  mysql-password: "password"
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-exporter
-  namespace: default
-  labels:
-    app: mysql-exporter
+  name: mysql-ld-exporter
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql-exporter
+      app: mysql-ld-exporter
   template:
     metadata:
       labels:
-        app: mysql-exporter
+        app: mysql-ld-exporter
     spec:
       containers:
-      - name: mysql-exporter
-        image: prom/mysqld-exporter:v0.15.0
-        args:
-          - "--mysqld.username=$(MYSQL_USER)"
-          - "--mysqld.address=mysql.default.svc.cluster.local:3306"
-          - "--collect.global_status"
-          - "--collect.global_variables"
-          - "--collect.info_schema.tables"
-          - "--collect.perf_schema.file_events"
-          - "--collect.binlog_size"
-        env:
-          - name: MYSQL_USER
-            valueFrom:
-              secretKeyRef:
-                name: mysql-exporter-secret
-                key: mysql-username
-          - name: MYSQLD_EXPORTER_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-exporter-secret
-                key: mysql-password
+      - name: mysqld-exporter
+        image: prom/mysqld-exporter:v0.15.1
         ports:
-          - name: metrics
-            containerPort: 9104
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 9104
-          initialDelaySeconds: 15
-          timeoutSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /metrics
-            port: 9104
-          initialDelaySeconds: 10
-          timeoutSeconds: 3
+        - name: metrics
+          containerPort: 9104
+        env:
+        - name: DATA_SOURCE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: datasource
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-exporter
-  namespace: default
+  name: mysql-ld-exporter
+  namespace: monitoring
   labels:
-    app: mysql-exporter
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9104"
+    app: mysql-ld-exporter
 spec:
   selector:
-    app: mysql-exporter
+    app: mysql-ld-exporter
   ports:
-    - name: metrics
-      port: 9104
-      targetPort: metrics
+  - name: metrics
+    port: 9104
+    targetPort: metrics
+

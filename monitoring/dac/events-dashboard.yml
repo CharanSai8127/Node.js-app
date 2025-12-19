@@ -11,27 +11,27 @@ data:
       "uid": "k8s-events",
       "title": "Kubernetes Events & Pod Stability",
       "schemaVersion": 36,
-      "version": 1,
+      "version": 2,
       "refresh": "30s",
       "panels": [
         {
-          "type": "graph",
-          "title": "Pod Restarts (per pod)",
+          "type": "timeseries",
+          "title": "Pod Restarts (last 1h)",
           "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
           "targets": [
             {
-              "expr": "increase(kube_pod_container_status_restarts_total[1h])",
+              "expr": "increase(kube_pod_container_status_restarts_total{namespace=\"default\"}[1h])",
               "legendFormat": "{{pod}}"
             }
           ]
         },
         {
-          "type": "graph",
+          "type": "timeseries",
           "title": "Pods in CrashLoopBackOff",
           "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
           "targets": [
             {
-              "expr": "kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\"}",
+              "expr": "kube_pod_container_status_waiting_reason{namespace=\"default\", reason=\"CrashLoopBackOff\"} == 1",
               "legendFormat": "{{pod}}"
             }
           ]

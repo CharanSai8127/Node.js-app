@@ -1,0 +1,106 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-mysql-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+
+  # 1️⃣ USER EXPERIENCE (NGINX Gateway)
+  - name: gateway.rules
+    rules:
+    - alert: HighGateway5xxErrorRate
+      expr: |
+        sum(rate(nginx_http_requests_total{status=~"5.."}[5m]))
+        /
+        sum(rate(nginx_http_requests_total[5m]))
+        > 0.05
+      for: 2m
+      labels:
+        severity: critical
+        service: gateway
+      annotations:
+        summary: "High 5xx error rate at Gateway"
+        description: "More than 5% of requests are failing with 5xx errors."
+
+    - alert: HighGatewayLatency
+      expr: |
+        histogram_quantile(
+          0.95,
+          sum by (le) (
+            rate(nginx_http_request_duration_seconds_bucket[5m])
+          )
+        ) > 2
+      for: 2m
+      labels:
+        severity: warning
+        service: gateway
+      annotations:
+        summary: "High request latency at Gateway"
+        description: "95th percentile latency is greater than 2 seconds."
+
+  # 2️⃣ APPLICATION STABILITY (Kubernetes)
+  - name: kubernetes.rules
+    rules:
+    - alert: PodCrashLooping
+      expr: |
+        rate(kube_pod_container_status_restarts_total{namespace="default"}[5m]) > 0
+      for: 2m
+      labels:
+        severity: critical
+        service: app
+      annotations:
+        summary: "Pod is crash looping"
+        description: "Pod {{ $labels.pod }} is restarting frequently."
+
+    - alert: PodNotReady
+      expr: |
+        kube_pod_status_ready{namespace="default", condition="true"} == 0
+      for: 2m
+      labels:
+        severity: warning
+        service: app
+      annotations:
+        summary: "Pod not ready"
+        description: "Pod {{ $labels.pod }} is not ready to serve traffic."
+
+  # DATA LAYER (MySQL exporter)
+  - name: mysql.rules
+    rules:
+    - alert: MySQLExporterDown
+      expr: mysql_up == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: mysql
+      annotations:
+        summary: "MySQL exporter down"
+        description: "MySQL exporter is unreachable."
+
+    - alert: MySQLTooManyConnections
+      expr: |
+        mysql_global_status_threads_connected
+        /
+        mysql_global_variables_max_connections
+        > 0.8
+      for: 2m
+      labels:
+        severity: warning
+        service: mysql
+      annotations:
+        summary: "MySQL connection saturation"
+        description: "MySQL is using more than 80% of allowed connections."
+
+    - alert: MySQLSlowQueries
+      expr: |
+        rate(mysql_global_status_slow_queries[5m]) > 1
+      for: 2m
+      labels:
+        severity: warning
+        service: mysql
+      annotations:
+        summary: "MySQL slow queries detected"
+        description: "Slow queries are increasing."
+
