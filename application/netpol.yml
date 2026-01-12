@@ -1,25 +1,23 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: mysql-allow-apps
-  namespace: default
+  name: allow-app-to-mysql-router
+  namespace: mysql
 spec:
   podSelector:
     matchLabels:
-      app: mysql
+      mysql.oracle.com/component: router
   policyTypes:
   - Ingress
   ingress:
   - from:
-    - podSelector:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: default
+      podSelector:
         matchLabels:
           app: app
-          version: blue
-    - podSelector:
-        matchLabels:
-          app: app
-          version: green
     ports:
     - protocol: TCP
-      port: 3306
+      port: 6446
 

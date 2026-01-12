@@ -20,7 +20,9 @@ spec:
         image: charansait372/node-js:green
         env:
         - name: DB_HOST
-          value: "mysql"   # MySQL service name (same namespace)
+          value: "mysql-cluster"
+        - name: DB_PORT
+          value: "6446"
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -45,3 +47,4 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+

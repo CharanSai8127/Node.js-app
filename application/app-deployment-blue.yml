@@ -20,7 +20,9 @@ spec:
         image: charansait372/node-js:blue
         env:
         - name: DB_HOST
-          value: "mysql"   # MySQL service name (same namespace)
+          value: "mysql-cluster"   # ✅ MySQL Router Service
+        - name: DB_PORT
+          value: "6446"            # ✅ Router RW port
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -45,3 +47,4 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+

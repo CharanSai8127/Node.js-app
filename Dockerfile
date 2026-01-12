@@ -1,38 +1,37 @@
-# Use an alpine Node.js runtime as a parent image
-FROM node:14-alpine
+# Stage 1: Build client
+FROM node:18-alpine AS client-build
 
-# Set the working directory in the container for the client
 WORKDIR /usr/src/app/client
 
-# Copy the client package.json and package-lock.json
 COPY client/package*.json ./
-
-# Install the client dependencies
 RUN npm install
 
-# Copy the client source code
-COPY client/ ./
-
-# Build the client application
+COPY client/ .
 RUN npm run build
 
-# Set the working directory in the container for the server
+# Stage 2: Build server
+FROM node:18-alpine AS server-build
+
 WORKDIR /usr/src/app/server
 
-# Copy the server package.json and package-lock.json
 COPY server/package*.json ./
-
-# Install the server dependencies (this ensures dotenv is installed)
 RUN npm install
 
-# Copy the server source code
-COPY server/ ./
+COPY server/ .
 
-# Copy the client build files to the server's public directory
-RUN mkdir -p ./public && cp -R /usr/src/app/client/dist/* ./public/
+# Stage 3: Runtime image
+FROM node:18-alpine
 
-# Expose the port the server will run on
+WORKDIR /usr/src/app
+
+# Copy server code
+COPY --from=server-build /usr/src/app/server ./server
+
+# Copy built client assets
+COPY --from=client-build /usr/src/app/client/dist ./client/public
+
+ENV NODE_ENV=production
 EXPOSE 5000
 
-# Command to run the server
-CMD ["npm", "start"]
+CMD ["node", "server/server.js"]
+
