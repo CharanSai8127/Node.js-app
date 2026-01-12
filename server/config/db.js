@@ -1,21 +1,27 @@
-// Import mysql module
-const mysql = require('mysql2');
+const mysql = require("mysql2/promise");
 
-// Use environment variables to configure the database connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'mysql', // Default to 'mysql' if DB_HOST is not set
-  user: process.env.DB_USER || 'root',  // Default to 'root' if DB_USER is not set
-  password: process.env.DB_PASSWORD || 'password',  // Default to 'password' if DB_PASSWORD is not set
-  database: process.env.DB_NAME || 'test_db',  // Default to 'test_db' if DB_NAME is not set
-});
+let connection = null;
 
-// Connect to the database
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed: ' + err.stack);
-    return;
+async function connectWithRetry() {
+  try {
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,        // mysql-cluster
+      port: process.env.DB_PORT || 6446,
+      user: process.env.DB_USER,        // app user
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
+
+    console.log("✅ Connected to MySQL via Router");
+  } catch (err) {
+    console.error("❌ DB connection failed, retrying in 5s:", err.message);
+    setTimeout(connectWithRetry, 5000);
   }
-  console.log('Connected to the database');
-});
+}
 
-module.exports = db;
+// start retry loop
+connectWithRetry();
+
+// export getter (NOT a static connection)
+module.exports = () => connection;
+
