@@ -5,7 +5,8 @@ const getUsers = async (req, res) => {
     const users = await userModel.getUsers();
     res.json(users);
   } catch (err) {
-    res.status(503).json({ error: err.message });
+    console.error("getUsers failed:", err.message);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 };
 
@@ -14,7 +15,8 @@ const addUser = async (req, res) => {
     const result = await userModel.addUser(req.body);
     res.status(201).json({ id: result.insertId, ...req.body });
   } catch (err) {
-    res.status(503).json({ error: err.message });
+    console.error("addUser failed:", err.message);
+    res.status(500).json({ error: "Failed to create user" });
   }
 };
 
@@ -23,7 +25,8 @@ const deleteUser = async (req, res) => {
     await userModel.deleteUser(req.params.id);
     res.json({ message: "User deleted" });
   } catch (err) {
-    res.status(503).json({ error: err.message });
+    console.error("deleteUser failed:", err.message);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 };
 

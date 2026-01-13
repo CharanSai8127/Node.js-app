@@ -1,27 +1,30 @@
 const mysql = require("mysql2/promise");
 
-let connection = null;
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,              // mysql-cluster.mysql.svc.cluster.local
+  port: Number(process.env.DB_PORT),       // 6446
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 
-async function connectWithRetry() {
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+// Verify DB connectivity at startup
+async function init() {
   try {
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST,        // mysql-cluster
-      port: process.env.DB_PORT || 6446,
-      user: process.env.DB_USER,        // app user
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
-
+    const conn = await pool.getConnection();
     console.log("✅ Connected to MySQL via Router");
+    conn.release();
   } catch (err) {
-    console.error("❌ DB connection failed, retrying in 5s:", err.message);
-    setTimeout(connectWithRetry, 5000);
+    console.error("❌ Database connection failed:", err.message);
+    process.exit(1); // Let Kubernetes restart
   }
 }
 
-// start retry loop
-connectWithRetry();
+init();
 
-// export getter (NOT a static connection)
-module.exports = () => connection;
+module.exports = pool;
 
