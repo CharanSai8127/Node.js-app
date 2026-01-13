@@ -18,26 +18,10 @@ spec:
       containers:
       - name: app
         image: charansait372/node-js:green
-        env:
-        - name: DB_HOST
-          value: "mysql-cluster"
-        - name: DB_PORT
-          value: "6446"
-        - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: DB_USER
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: DB_PASSWORD
-        - name: DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: DB_NAME
+        imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: mysql-secret
         ports:
         - containerPort: 5000
         resources:
