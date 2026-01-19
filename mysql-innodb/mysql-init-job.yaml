@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-init-db
+  namespace: mysql
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mysql-init
+        image: mysql:8.0
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: mysql-secret
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for MySQL Router..."
+          until mysql -h mysql-cluster-router.mysql.svc.cluster.local \
+                      -u"$MYSQL_USER" \
+                      -p"$MYSQL_PASSWORD" \
+                      -e "SELECT 1" >/dev/null 2>&1; do
+            echo "MySQL not ready yet..."
+            sleep 5
+          done
+
+          echo "MySQL is reachable. Initializing database..."
+
+          mysql -h mysql-cluster-router.mysql.svc.cluster.local \
+                -u"$MYSQL_USER" \
+                -p"$MYSQL_PASSWORD" <<EOF
+          CREATE DATABASE IF NOT EXISTS appdb;
+          EOF
+
+          echo "Database initialization complete."
+
