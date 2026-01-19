@@ -12,6 +12,8 @@ spec:
       - name: mysql-init
         image: mysql:8.0
         imagePullPolicy: IfNotPresent
+
+        # Use MySQL Operator root secret explicitly
         env:
         - name: MYSQL_USER
           value: root
@@ -20,24 +22,30 @@ spec:
             secretKeyRef:
               name: mysql-root-secret
               key: rootPassword
+
         command:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for MySQL Router..."
-          until mysql -h mysql-cluster-router.mysql.svc.cluster.local \
-                      -u"$MYSQL_USER" \
-                      -p"$MYSQL_PASSWORD" \
-                      -e "SELECT 1" >/dev/null 2>&1; do
-            echo "MySQL not ready yet..."
-            sleep 5
+          echo "Waiting for MySQL Cluster service..."
+
+          until mysql \
+            -h mysql-cluster.mysql.svc.cluster.local \
+            -P 3306 \
+            -u"$MYSQL_USER" \
+            -p"$MYSQL_PASSWORD" \
+            -e "SELECT 1" >/dev/null 2>&1; do
+              echo "MySQL not ready yet..."
+              sleep 5
           done
 
           echo "MySQL is reachable. Initializing database..."
 
-          mysql -h mysql-cluster-router.mysql.svc.cluster.local \
-                -u"$MYSQL_USER" \
-                -p"$MYSQL_PASSWORD" <<EOF
+          mysql \
+            -h mysql-cluster.mysql.svc.cluster.local \
+            -P 3306 \
+            -u"$MYSQL_USER" \
+            -p"$MYSQL_PASSWORD" <<EOF
           CREATE DATABASE IF NOT EXISTS appdb;
           EOF
 
