@@ -12,9 +12,14 @@ spec:
       - name: mysql-init
         image: mysql:8.0
         imagePullPolicy: IfNotPresent
-        envFrom:
-        - secretRef:
-            name: mysql-secret
+        env:
+        - name: MYSQL_USER
+          value: root
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-root-secret
+              key: rootPassword
         command:
         - /bin/sh
         - -c
