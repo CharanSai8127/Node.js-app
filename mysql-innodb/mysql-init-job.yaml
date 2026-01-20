@@ -13,7 +13,6 @@ spec:
         image: mysql:8.0
         imagePullPolicy: IfNotPresent
 
-        # Use MySQL Operator root secret explicitly
         env:
         - name: MYSQL_USER
           value: root
@@ -27,27 +26,33 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for MySQL Cluster service..."
+          echo "Waiting for MySQL Router..."
 
           until mysql \
             -h mysql-cluster.mysql.svc.cluster.local \
-            -P 3306 \
+            -P 6446 \
             -u"$MYSQL_USER" \
             -p"$MYSQL_PASSWORD" \
             -e "SELECT 1" >/dev/null 2>&1; do
-              echo "MySQL not ready yet..."
+              echo "MySQL Router not ready yet..."
               sleep 5
           done
 
-          echo "MySQL is reachable. Initializing database..."
+          echo "Initializing database and app user..."
 
           mysql \
             -h mysql-cluster.mysql.svc.cluster.local \
-            -P 3306 \
+            -P 6446 \
             -u"$MYSQL_USER" \
             -p"$MYSQL_PASSWORD" <<EOF
           CREATE DATABASE IF NOT EXISTS appdb;
+
+          CREATE USER IF NOT EXISTS 'appuser'@'%' IDENTIFIED BY 'AppUserPass123!';
+
+          GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
+
+          FLUSH PRIVILEGES;
           EOF
 
-          echo "Database initialization complete."
+          echo "Database and user initialization complete."
 
