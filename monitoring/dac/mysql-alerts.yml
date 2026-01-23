@@ -1,0 +1,109 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mysql-innodb-concern-alerts
+  namespace: monitoring
+spec:
+  groups:
+
+  # =========================================================
+  # SAFETY — MySQL must remain available and writable
+  # =========================================================
+  - name: mysql.safety
+    rules:
+
+    - alert: MySQLPrimaryNotReady
+      expr: |
+        mysql_global_status_wsrep_ready == 0
+      for: 1m
+      labels:
+        severity: critical
+        concern: safety
+      annotations:
+        summary: "MySQL primary not ready"
+        description: "The MySQL primary node is not ready to serve traffic. Operator recovery should engage."
+
+    - alert: MySQLQuorumAtRisk
+      expr: |
+        count(
+          up{namespace="mysql"} == 0
+        ) > 1
+      for: 2m
+      labels:
+        severity: critical
+        concern: safety
+      annotations:
+        summary: "MySQL quorum at risk"
+        description: "More than one MySQL instance is unavailable. Quorum is at risk. Check PDB and node disruptions."
+
+  # =========================================================
+  # TIME AS SAFETY — Evictions and disruptions must be serialized
+  # =========================================================
+  - name: mysql.time-safety
+    rules:
+
+    - alert: MySQLPodEvictionPressure
+      expr: |
+        increase(kube_pod_container_status_restarts_total{namespace="mysql"}[5m]) > 1
+      for: 5m
+      labels:
+        severity: warning
+        concern: safety
+      annotations:
+        summary: "MySQL pod eviction pressure detected"
+        description: "Multiple MySQL pod restarts detected. Possible node drain or infra instability."
+
+  # =========================================================
+  # SCALABILITY — Load must grow gradually, not in bursts
+  # =========================================================
+  - name: mysql.scalability
+    rules:
+
+    - alert: MySQLConnectionSpike
+      expr: |
+        increase(mysql_global_status_threads_connected[2m]) > 20
+      for: 2m
+      labels:
+        severity: warning
+        concern: scalability
+      annotations:
+        summary: "Sudden MySQL connection spike"
+        description: "Rapid increase in DB connections detected. Possible startup storm or aggressive scaling."
+
+  # =========================================================
+  # COST-CONTROL — Database must not saturate under load
+  # =========================================================
+  - name: mysql.cost-control
+    rules:
+
+    - alert: MySQLThreadSaturationRisk
+      expr: |
+        mysql_global_status_threads_running
+        /
+        mysql_global_variables_max_connections
+        > 0.8
+      for: 3m
+      labels:
+        severity: warning
+        concern: cost-control
+      annotations:
+        summary: "MySQL thread saturation risk"
+        description: "More than 80% of MySQL connection capacity is in use. Risk of degraded performance."
+
+  # =========================================================
+  # OWNERSHIP — Operator-managed DB should not churn unexpectedly
+  # =========================================================
+  - name: mysql.ownership
+    rules:
+
+    - alert: MySQLUnexpectedPodChurn
+      expr: |
+        changes(kube_pod_status_ready{namespace="mysql"}[5m]) > 3
+      for: 5m
+      labels:
+        severity: warning
+        concern: ownership
+      annotations:
+        summary: "Unexpected MySQL pod churn"
+        description: "Frequent MySQL pod readiness changes detected. Investigate operator or infrastructure stability."
+

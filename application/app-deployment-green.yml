@@ -4,28 +4,51 @@ metadata:
   name: app-green
 spec:
   replicas: 1
+
+  # ---- Time as a safety check ----
   minReadySeconds: 15
+
   selector:
     matchLabels:
       app: app
       version: green
+
+  # ---- Rollback & rollout safety ----
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0   # never drop traffic completely
+      maxSurge: 1         # allow one extra pod during rollout
+
   template:
     metadata:
       labels:
         app: app
         version: green
+
     spec:
       dnsPolicy: ClusterFirst
       terminationGracePeriodSeconds: 30
+
+      # ---- Pod-level security (least privilege) ----
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
       containers:
       - name: app
         image: charansait372/node-js:green
         imagePullPolicy: Always
+
         envFrom:
         - secretRef:
             name: mysql-secret
+
         ports:
         - containerPort: 5000
+
+        # ---- Cost-control (bounded behavior) ----
         resources:
           requests:
             cpu: "250m"
@@ -34,6 +57,15 @@ spec:
             cpu: "500m"
             memory: "512Mi"
 
+        # ---- Container-level security ----
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+        # ---- Safety: traffic admission gate ----
         readinessProbe:
           httpGet:
             path: /health/ready
@@ -43,6 +75,7 @@ spec:
           timeoutSeconds: 2
           failureThreshold: 3
 
+        # ---- Safety: self-healing ----
         livenessProbe:
           httpGet:
             path: /health/live

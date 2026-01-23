@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mysql-innodb
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - mysql
+  selector:
+    matchLabels:
+      mysql.oracle.com/cluster: mysql-cluster
+      mysql.oracle.com/component: mysqld
+  endpoints:
+  - interval: 30s
+    port: mysql
+

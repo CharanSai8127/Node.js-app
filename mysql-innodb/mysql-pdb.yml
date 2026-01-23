@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mysql-cluster-pdb
+  namespace: mysql
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      mysql.oracle.com/cluster: mysql-cluster
+      mysql.oracle.com/component: mysqld
+
