@@ -1,0 +1,46 @@
+{
+  "uid": "gitops",
+  "title": "GitOps, Ownership & Drift Control",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "App Sync Status",
+      "targets": [
+        {
+          "expr": "argocd_app_sync_status"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "App Health Status",
+      "targets": [
+        {
+          "expr": "argocd_app_health_status"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Reconcile Rate",
+      "targets": [
+        {
+          "expr": "rate(argocd_app_reconcile_count[5m])"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Sync Duration",
+      "targets": [
+        {
+          "expr": "argocd_app_operation_duration_seconds"
+        }
+      ]
+    }
+  ]
+}
+

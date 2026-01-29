@@ -1,0 +1,49 @@
+{
+  "uid": "scalability",
+  "title": "Scalability & Load Absorption",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{namespace=\"default\",pod=~\"app.*\"}[1m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency P95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HPA Desired vs Current",
+      "targets": [
+        {
+          "expr": "kube_hpa_status_desired_replicas{namespace=\"default\"}"
+        },
+        {
+          "expr": "kube_hpa_status_current_replicas{namespace=\"default\"}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB Connections",
+      "targets": [
+        {
+          "expr": "mysql_global_status_threads_connected"
+        }
+      ]
+    }
+  ]
+}
+

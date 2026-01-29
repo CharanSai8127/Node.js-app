@@ -1,0 +1,46 @@
+{
+  "uid": "mysql-safety",
+  "title": "Database Safety & Stability",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "MySQL Up",
+      "targets": [
+        {
+          "expr": "mysql_up"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Threads Connected",
+      "targets": [
+        {
+          "expr": "mysql_global_status_threads_connected"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Threads Running / Max",
+      "targets": [
+        {
+          "expr": "mysql_global_status_threads_running / mysql_global_variables_max_connections"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Slow Queries",
+      "targets": [
+        {
+          "expr": "rate(mysql_global_status_slow_queries[5m])"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    release: kube-prometheus-stack
+data:
+  application-health.json: |-
+    {{ .Files.Get "grafana/dashboards/application-health.json" }}
+  deployment-safety.json: |-
+    {{ .Files.Get "grafana/dashboards/deployment-safety.json" }}
+  cost-resource-boundaries.json: |-
+    {{ .Files.Get "grafana/dashboards/cost-resource-boundaries.json" }}
+  scalability-load.json: |-
+    {{ .Files.Get "grafana/dashboards/scalability-load.json" }}
+  database-safety.json: |-
+    {{ .Files.Get "grafana/dashboards/database-safety.json" }}
+  gitops-ownership.json: |-
+    {{ .Files.Get "grafana/dashboards/gitops-ownership.json" }}
+

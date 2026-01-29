@@ -1,0 +1,73 @@
+{
+  "uid": "app-health",
+  "title": "Application Health – Node.js",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pods Ready",
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"default\",condition=\"true\",pod=~\"app.*\"})"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Pods Not Ready",
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"default\",condition=\"true\",pod=~\"app.*\"} == 0)"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Pod Restarts (1h)",
+      "targets": [
+        {
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\",pod=~\"app.*\"}[1h]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{namespace=\"default\",pod=~\"app.*\"}[1m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate (5xx)",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency P95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Process Uptime",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds"
+        }
+      ]
+    }
+  ]
+}
+

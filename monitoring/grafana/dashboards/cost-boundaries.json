@@ -1,0 +1,49 @@
+{
+  "uid": "cost-boundaries",
+  "title": "Cost & Resource Boundaries",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Memory Usage vs Limit",
+      "targets": [
+        {
+          "expr": "container_memory_working_set_bytes{namespace=\"default\",pod=~\"app.*\",container!=\"POD\"} / container_spec_memory_limit_bytes{namespace=\"default\",pod=~\"app.*\",container!=\"POD\"}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "OOMKills (1h)",
+      "targets": [
+        {
+          "expr": "sum(increase(container_oom_events_total{namespace=\"default\",pod=~\"app.*\"}[1h]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage vs Quota",
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{namespace=\"default\",pod=~\"app.*\",container!=\"POD\"}[5m]) / container_spec_cpu_quota{namespace=\"default\",pod=~\"app.*\",container!=\"POD\"}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "HPA Desired vs Max",
+      "targets": [
+        {
+          "expr": "kube_hpa_status_desired_replicas{namespace=\"default\"}"
+        },
+        {
+          "expr": "kube_hpa_spec_max_replicas{namespace=\"default\"}"
+        }
+      ]
+    }
+  ]
+}
+
