@@ -3,6 +3,10 @@ kind: Job
 metadata:
   name: mysql-init-db
   namespace: mysql
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 5
   template:
@@ -55,4 +59,3 @@ spec:
           EOF
 
           echo "Database and user initialization complete."
-
