@@ -7,16 +7,163 @@ metadata:
     grafana_dashboard: "1"
     release: kube-prometheus-stack
 data:
-  application-health.json: |-
-    {{ .Files.Get "grafana/dashboards/application-health.json" }}
-  deployment-safety.json: |-
-    {{ .Files.Get "grafana/dashboards/deployment-safety.json" }}
-  cost-resource-boundaries.json: |-
-    {{ .Files.Get "grafana/dashboards/cost-resource-boundaries.json" }}
-  scalability-load.json: |-
-    {{ .Files.Get "grafana/dashboards/scalability-load.json" }}
-  database-safety.json: |-
-    {{ .Files.Get "grafana/dashboards/database-safety.json" }}
-  gitops-ownership.json: |-
-    {{ .Files.Get "grafana/dashboards/gitops-ownership.json" }}
 
+  application-health.json: |
+    {
+      "uid": "app-health",
+      "title": "Application Health – Node.js",
+      "schemaVersion": 36,
+      "version": 2,
+      "refresh": "15s",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Pods Ready",
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_ready{condition=\"true\",pod=~\"app-blue.*\"})"
+            },
+            {
+              "expr": "sum(kube_pod_status_ready{condition=\"true\",pod=~\"app-green.*\"})"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Traffic Split",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{pod=~\"app-blue.*\"}[1m]))",
+              "legendFormat": "blue"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{pod=~\"app-green.*\"}[1m]))",
+              "legendFormat": "green"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error Rate",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{status=~\"5..\",pod=~\"app-blue.*\"}[5m])) / sum(rate(http_requests_total{pod=~\"app-blue.*\"}[5m]))",
+              "legendFormat": "blue"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{status=~\"5..\",pod=~\"app-green.*\"}[5m])) / sum(rate(http_requests_total{pod=~\"app-green.*\"}[5m]))",
+              "legendFormat": "green"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency P95",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{pod=~\"app-blue.*\"}[5m])))",
+              "legendFormat": "blue"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{pod=~\"app-green.*\"}[5m])))",
+              "legendFormat": "green"
+            }
+          ]
+        }
+      ]
+    }
+
+  cost-boundaries.json: |
+    {
+      "uid": "cost-boundaries",
+      "title": "Cost & Resource Boundaries",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Memory Usage",
+          "targets": [
+            {
+              "expr": "container_memory_working_set_bytes{pod=~\"app.*\"}"
+            }
+          ]
+        }
+      ]
+    }
+
+  database-safety.json: |
+    {
+      "uid": "mysql-safety",
+      "title": "Database Safety",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "MySQL Up",
+          "targets": [
+            {
+              "expr": "mysql_up"
+            }
+          ]
+        }
+      ]
+    }
+
+  deployment-safety.json: |
+    {
+      "uid": "deploy-safety",
+      "title": "Deployment Safety",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Replicas Available",
+          "targets": [
+            {
+              "expr": "kube_deployment_status_replicas_available{deployment=~\"app-.*\"}"
+            }
+          ]
+        }
+      ]
+    }
+
+  gitops-ownership.json: |
+    {
+      "uid": "gitops",
+      "title": "GitOps",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Sync Status",
+          "targets": [
+            {
+              "expr": "argocd_app_sync_status"
+            }
+          ]
+        }
+      ]
+    }
+
+  scalability.json: |
+    {
+      "uid": "scalability",
+      "title": "Scalability",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Request Rate",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[1m]))"
+            }
+          ]
+        }
+      ]
+    }

@@ -1,52 +1,35 @@
 {
   "uid": "app-health",
-  "title": "Application Health – Node.js",
+  "title": "Application Health – Blue vs Green",
   "schemaVersion": 36,
-  "version": 1,
-  "refresh": "15s",
+  "version": 2,
+  "refresh": "10s",
   "panels": [
     {
-      "type": "stat",
-      "title": "Pods Ready",
+      "type": "timeseries",
+      "title": "Traffic Split",
       "targets": [
         {
-          "expr": "sum(kube_pod_status_ready{namespace=\"default\",condition=\"true\",pod=~\"app.*\"})"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Pods Not Ready",
-      "targets": [
+          "expr": "sum(rate(http_requests_total{pod=~\"app-blue.*\"}[1m]))",
+          "legendFormat": "blue"
+        },
         {
-          "expr": "sum(kube_pod_status_ready{namespace=\"default\",condition=\"true\",pod=~\"app.*\"} == 0)"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Pod Restarts (1h)",
-      "targets": [
-        {
-          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\",pod=~\"app.*\"}[1h]))"
+          "expr": "sum(rate(http_requests_total{pod=~\"app-green.*\"}[1m]))",
+          "legendFormat": "green"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Request Rate",
+      "title": "Error Rate",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{namespace=\"default\",pod=~\"app.*\"}[1m]))"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Error Rate (5xx)",
-      "targets": [
+          "expr": "sum(rate(http_requests_total{status=~\"5..\",pod=~\"app-blue.*\"}[5m])) / sum(rate(http_requests_total{pod=~\"app-blue.*\"}[5m]))",
+          "legendFormat": "blue"
+        },
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))"
+          "expr": "sum(rate(http_requests_total{status=~\"5..\",pod=~\"app-green.*\"}[5m])) / sum(rate(http_requests_total{pod=~\"app-green.*\"}[5m]))",
+          "legendFormat": "green"
         }
       ]
     },
@@ -55,19 +38,14 @@
       "title": "Latency P95",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Process Uptime",
-      "targets": [
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{pod=~\"app-blue.*\"}[5m])))",
+          "legendFormat": "blue"
+        },
         {
-          "expr": "process_uptime_seconds"
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{pod=~\"app-green.*\"}[5m])))",
+          "legendFormat": "green"
         }
       ]
     }
   ]
 }
-

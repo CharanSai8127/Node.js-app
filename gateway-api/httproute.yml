@@ -7,14 +7,21 @@ spec:
   parentRefs:
   - name: nginx-gateway
     namespace: nginx-gateway
+
   hostnames:
   - "app.example.com"
+
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
-    backendRefs:
-    - name: app
-      port: 80
 
+    backendRefs:
+    - name: app-service-blue
+      port: 80
+      weight: 100   # initial traffic to blue
+
+    - name: app-service-green
+      port: 80
+      weight: 0     # green receives no traffic initially

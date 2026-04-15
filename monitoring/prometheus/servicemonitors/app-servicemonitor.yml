@@ -11,7 +11,9 @@ spec:
   namespaceSelector:
     matchNames:
     - default
+
   endpoints:
   - port: http
-    interval: 30s
-
+    path: /metrics     #  IMPORTANT
+    interval: 15s
+    scrapeTimeout: 10s
