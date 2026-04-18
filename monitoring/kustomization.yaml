@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - alertmanager/alert-manager.yml
+  - alertmanager/alert-manager-cm.yml
+  - alertmanager/alert-manager-secret.yml
+
+  - grafana/dashboards-configmap.yaml
+
+  - prometheus/rules/app-alerts.yml
+  - prometheus/rules/mysql-alerts.yml
+
+  - prometheus/servicemonitors/app-servicemonitor.yml
+  - prometheus/servicemonitors/gateway-servicemonitor.yml
+  - prometheus/servicemonitors/mysql-servicemonitor.yml
