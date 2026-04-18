@@ -16,7 +16,7 @@ spec:
 
   source:
     repoURL: https://github.com/CharanSai8127/Node.js-app.git
-    targetRevision: main
+    targetRevision: HEAD
     path: application/green
 
   destination:
