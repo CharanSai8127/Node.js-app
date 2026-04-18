@@ -4,16 +4,23 @@ metadata:
   name: app-green
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd-image-updater.argoproj.io/image-list: app=charansait372/node-js
+    argocd-image-updater.argoproj.io/update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+
 spec:
   project: default
+
   source:
     repoURL: https://github.com/CharanSai8127/Node.js-app.git
-    targetRevision: HEAD
+    targetRevision: main
     path: application/green
+
   destination:
     server: https://kubernetes.default.svc
     namespace: default
+
   syncPolicy:
     automated:
       prune: true
